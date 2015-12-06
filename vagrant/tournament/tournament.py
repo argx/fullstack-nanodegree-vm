@@ -8,6 +8,7 @@ import psycopg2
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
+    #connect to tournament database
     return psycopg2.connect("dbname=tournament")
 
 
@@ -15,6 +16,7 @@ def deleteMatches():
     """Remove all the match records from the database."""
     conn = connect()
     c = conn.cursor()
+    # delete every row in match table and commit
     c.execute("delete from match")
     conn.commit()
     conn.close()
@@ -24,6 +26,7 @@ def deletePlayers():
     """Remove all the player records from the database."""
     conn = connect()
     c = conn.cursor()
+    # delete every row in player table and commit
     c.execute("delete from player")
     conn.commit()
     conn.close()
@@ -108,16 +111,21 @@ def swissPairings():
     """
     conn = connect()
     c = conn.cursor()
+
+    # get players ordered by wins
+    # players with same wins count are shuffled
     c.execute("select id, name from standings "
               "order by wins desc, random()")
     players = c.fetchall()
     conn.close()
 
+    # split players into two groups to assign pairs
     first_group = players[0::2]
     second_group = players[1::2]
 
-    pairings = []
 
+    # construct list of tuples pairings
+    pairings = []
     for index in range(len(second_group)):
         pairings += [(first_group[index][0], first_group[index][1],
                      second_group[index][0], second_group[index][1])]

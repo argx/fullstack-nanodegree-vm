@@ -6,21 +6,29 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+-- drop tables to test new versions of the schema
 drop view if exists standings;
 drop table if exists match;
 drop table if exists player;
 
+-- Players table. Contains every registered player for this tournament
 create table player (
 	id				serial primary key,
 	name			varchar(64)
 );
 
+-- Matches table. Contains results for every played match
 create table match (
 	id 				serial primary key,
 	winner			integer references player(id),
 	loser			integer references player(id)
 );
 
+-- Standings view. Displays current positions for players in the tournament
+-- It is constructed from the join of two different subqueries.
+-- First subquery returns wins count for each player
+-- Second subquery returns loses count for each player
+-- The resulting table calculates column `matches` by adding wins + loses
 create view standings as 
 	select wins_table.id, name, wins, (wins + loses) as matches from 
 		(select player.id, name, count(winner) as wins from player 
@@ -32,25 +40,3 @@ create view standings as
 			as loses_table
 		on wins_table.id=loses_table.id
 		order by wins desc, matches desc, id;
-
-insert into player (name) values
-	('Lionel Messi'),
-	('Cristiano Ronaldo'),
-	('Luis Suárez'),
-	('Gareth Bale'),
-	('Andrés Iniesta'),
-	('Neymar Santos'),
-	('Arturo Vidal'),
-	('Arjen Robben'),
-	('Zlatan Ibrahimović'),
-	('Ángel di María'),
-	('Manuel Neuer'),
-	('Toni Kroos'),
-	('Thiago Silva'),
-	('Marco Reus'),
-	('Sergio Busquets'),
-	('James Rodríguez'),
-	('Frank Ribéry'),
-	('Sergio Agüero'),
-	('Thomas Müller'),
-	('Philipp Lahm');
