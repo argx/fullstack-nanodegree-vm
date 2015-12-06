@@ -20,6 +20,10 @@ create table match (
 	loser			integer references player(id)
 );
 
+create view standings as select player.id, name, count(winner) as wins, 
+	count(match.id) as matches from player left outer join match 
+	on player.id=winner group by player.id order by wins desc;
+
 insert into player (name) values
 	('Lionel Messi'),
 	('Cristiano Ronaldo'),
