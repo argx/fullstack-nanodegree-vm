@@ -6,6 +6,7 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+drop view if exists standings;
 drop table if exists match;
 drop table if exists player;
 
@@ -20,9 +21,17 @@ create table match (
 	loser			integer references player(id)
 );
 
-create view standings as select player.id, name, count(winner) as wins, 
-	count(match.id) as matches from player left outer join match 
-	on player.id=winner group by player.id order by wins desc;
+create view standings as 
+	select wins_table.id, name, wins, (wins + loses) as matches from 
+		(select player.id, name, count(winner) as wins from player 
+			left join match on player.id=winner group by player.id)
+			as wins_table
+		join
+		(select player.id, count(loser) as loses from player 
+			left join match on player.id=loser group by player.id)
+			as loses_table
+		on wins_table.id=loses_table.id
+		order by wins desc, matches desc, id;
 
 insert into player (name) values
 	('Lionel Messi'),
