@@ -20,7 +20,7 @@ create table match (
 	loser			integer references player(id)
 );
 
-insert into player (name, lastname) values
+insert into player (name) values
 	('Lionel Messi'),
 	('Cristiano Ronaldo'),
 	('Luis Suárez'),
