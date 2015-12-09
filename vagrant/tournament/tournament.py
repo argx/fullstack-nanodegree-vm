@@ -6,9 +6,10 @@
 import psycopg2
 from zlib import crc32
 
+
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    #connect to tournament database
+    # connect to tournament database
     return psycopg2.connect("dbname=tournament")
 
 
@@ -93,6 +94,7 @@ def reportMatch(winner, loser):
     conn.commit()
     conn.close()
 
+
 def nextMatch():
     """Returns a tuple with next match players
 
@@ -104,6 +106,7 @@ def nextMatch():
         name2: the second player's name
     """
     return swissPairings()[0]
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -136,7 +139,6 @@ def swissPairings():
     # split players into two groups to assign pairs
     first_group = players[0::2]
     second_group = players[1::2]
-
 
     # construct list of tuples pairings
     pairings = []
@@ -175,4 +177,4 @@ def seed():
     allNames = ""
     for name in names:
         allNames += name[0]
-    return float(str(crc32(roundNumber+allNames)).replace("-","")[:6])/1000000
+    return float(str(crc32(roundNumber+allNames)).replace("-", "")[:6])/1000000
