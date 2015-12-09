@@ -60,3 +60,8 @@ tournament=> \q
 Now that everything is set, we can use the library as needed.
 
 A script named `my_tournament.py` has been included as an example.
+
+You can try it out by running it in shell:
+```
+$ ./my_tournament.py
+```
