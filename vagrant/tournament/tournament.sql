@@ -8,6 +8,7 @@
 
 -- drop tables to test new versions of the schema
 drop view if exists standings;
+drop view if exists player_points;
 drop table if exists match;
 drop table if exists player;
 
@@ -24,12 +25,11 @@ create table match (
 	loser			integer references player(id)
 );
 
--- Standings view. Displays current positions for players in the tournament
--- It is constructed from the join of two different subqueries.
--- First subquery returns wins count for each player
--- Second subquery returns loses count for each player
--- The resulting table calculates column `matches` by adding wins + loses
-create view standings as 
+-- This view is for internal use. We need it to be unordered so random numbers
+-- assigned to each player remain the same during current round of games.
+-- This way player pairings for the round keep the same if other games have
+-- been played
+create view player_points as 
 	select wins_table.id, name, wins, (wins + loses) as matches from 
 		(select player.id, name, count(winner) as wins from player 
 			left join match on player.id=winner group by player.id)
@@ -38,5 +38,13 @@ create view standings as
 		(select player.id, count(loser) as loses from player 
 			left join match on player.id=loser group by player.id)
 			as loses_table
-		on wins_table.id=loses_table.id
-		order by wins desc, matches desc, id;
+		on wins_table.id=loses_table.id;
+
+-- Standings view. Displays current positions for players in the tournament
+-- It is constructed from the join of two different subqueries.
+-- First subquery returns wins count for each player
+-- Second subquery returns loses count for each player
+-- The resulting table calculates column `matches` by adding wins + loses
+create view standings as
+	select id, name, wins, matches from player_points
+	order by wins desc, matches desc, id;

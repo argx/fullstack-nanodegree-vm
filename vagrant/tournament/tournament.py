@@ -4,7 +4,7 @@
 #
 
 import psycopg2
-
+from zlib import crc32
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -93,6 +93,17 @@ def reportMatch(winner, loser):
     conn.commit()
     conn.close()
 
+def nextMatch():
+    """Returns a tuple with next match players
+
+    Returns:
+      A touple containing (id1, name1, id2, name2)
+        id1: the first player's unique id
+        name1: the first player's name
+        id2: the second player's unique id
+        name2: the second player's name
+    """
+    return swissPairings()[0]
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -112,10 +123,13 @@ def swissPairings():
     conn = connect()
     c = conn.cursor()
 
+    # use a seed specific to current player list and round number
+    c.execute("select setseed(%s)", (seed(),))
+
     # get players ordered by wins
     # players with same wins count are shuffled
-    c.execute("select id, name from standings "
-              "order by wins desc, random()")
+    c.execute("select id, name from player_points "
+              "order by matches, wins desc, random()")
     players = c.fetchall()
     conn.close()
 
@@ -131,3 +145,34 @@ def swissPairings():
                      second_group[index][0], second_group[index][1])]
 
     return pairings
+
+
+def getRoundNumber():
+    conn = connect()
+    c = conn.cursor()
+
+    c.execute("select min(matches) from standings")
+    roundNumber = c.fetchall()[0][0] + 1
+    conn.close()
+
+    return roundNumber
+
+
+def seed():
+    """Returns a float number that is the seed to be used at players pairing.
+    This takes into account the current round for this tournament, so at every
+    round players at each point group are shuffled differently.
+    """
+    conn = connect()
+    c = conn.cursor()
+
+    roundNumber = str(getRoundNumber())
+
+    c.execute("select name from player order by id")
+    names = c.fetchall()
+    conn.close()
+
+    allNames = ""
+    for name in names:
+        allNames += name[0]
+    return float(str(crc32(roundNumber+allNames)).replace("-","")[:6])/1000000
